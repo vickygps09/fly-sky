@@ -1,4 +1,10 @@
 services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
   postgres:
     image: postgres:16-alpine
     environment:
@@ -25,9 +31,12 @@ services:
     environment:
       - DATABASE_URL=postgresql://skybook:${POSTGRES_PASSWORD:-skybook123}@postgres:5432/skybook
       - CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+      - REDIS_URL=redis://redis:6379/0
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_started
     restart: unless-stopped
 
   frontend:

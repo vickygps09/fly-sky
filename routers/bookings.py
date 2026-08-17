@@ -11,6 +11,7 @@ from chatbot.tools import (
     create_booking, get_booking_by_pnr, get_user_bookings,
     cancel_booking, modify_booking, web_check_in, get_boarding_pass,
 )
+from cache import cache_get, cache_set, cache_delete
 
 router = APIRouter(prefix="/api/bookings", tags=["Bookings"])
 
@@ -29,18 +30,23 @@ def create(data: BookingCreate, db: Session = Depends(get_db), user: models.User
     )
     if "error" in result:
         raise HTTPException(status_code=400, detail=result["error"])
+    if user:
+        cache_delete(f"bookings:user:{user.id}")
     return result
 
 
 @router.get("/{pnr}", response_model=BookingOut)
 def get_booking(pnr: str, db: Session = Depends(get_db)):
+    cache_key = f"booking:pnr:{pnr.upper()}"
+    cached = cache_get(cache_key)
+    if cached:
+        return BookingOut(**cached)
     booking = get_booking_by_pnr(db, pnr)
     if not booking:
         raise HTTPException(status_code=404, detail="Booking not found")
-    # Convert datetime strings for response
     dep_time = datetime.fromisoformat(booking["departure_time"])
     arr_time = datetime.fromisoformat(booking["arrival_time"])
-    return BookingOut(
+    out = BookingOut(
         id=booking["id"],
         pnr=booking["pnr"],
         flight_number=booking["flight_number"],
@@ -58,10 +64,16 @@ def get_booking(pnr: str, db: Session = Depends(get_db)):
         passengers=booking["passengers"],
         created_at=booking.get("created_at", ""),
     )
+    cache_set(cache_key, out.model_dump(), ttl=300)
+    return out
 
 
 @router.get("/user/{user_id}", response_model=list[BookingOut])
 def list_user_bookings(user_id: str, db: Session = Depends(get_db)):
+    cache_key = f"bookings:user:{user_id}"
+    cached = cache_get(cache_key)
+    if cached:
+        return [BookingOut(**b) for b in cached]
     bookings = get_user_bookings(db, user_id)
     result = []
     for b in bookings:
@@ -80,6 +92,7 @@ def list_user_bookings(user_id: str, db: Session = Depends(get_db)):
             booking_status=b["booking_status"], check_in_status=b["check_in_status"],
             passengers=b["passengers"], created_at=b.get("created_at", ""),
         ))
+    cache_set(cache_key, [b.model_dump() for b in result], ttl=120)
     return result
 
 
@@ -88,6 +101,7 @@ def modify(pnr: str, data: BookingModify, db: Session = Depends(get_db)):
     result = modify_booking(db, pnr, data.new_flight_id, data.new_seat_numbers)
     if "error" in result:
         raise HTTPException(status_code=400, detail=result["error"])
+    cache_delete(f"booking:pnr:{pnr.upper()}")
     return result
 
 
@@ -96,6 +110,7 @@ def cancel(pnr: str, data: BookingCancel, db: Session = Depends(get_db)):
     result = cancel_booking(db, pnr, data.reason)
     if "error" in result:
         raise HTTPException(status_code=400, detail=result["error"])
+    cache_delete(f"booking:pnr:{pnr.upper()}")
     return result
 
 

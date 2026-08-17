@@ -42,6 +42,9 @@ class Settings(BaseSettings):
     RESEND_API_KEY: str = ""
     RESEND_FROM_EMAIL: str = "onboarding@resend.dev"
 
+    # Redis
+    REDIS_URL: str = ""
+
     # External APIs
     WEATHER_API_URL: str = "https://api.open-meteo.com/v1/forecast"
     EXCHANGE_RATE_API_URL: str = "https://open.er-api.com/v6/latest"

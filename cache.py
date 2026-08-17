@@ -1,18 +1,16 @@
 """Redis cache utility — optional, falls back to in-memory cache if Redis unavailable."""
 
-import os
 import json
 import time
 from typing import Optional, Any
-
-_REDIS_URL = os.getenv("REDIS_URL", "")
+from config import settings
 
 _cache: dict[str, tuple[Any, float]] = {}
 
 try:
-    if _REDIS_URL:
+    if settings.REDIS_URL:
         import redis as redis_lib
-        _redis_client = redis_lib.from_url(_REDIS_URL, decode_responses=True)
+        _redis_client = redis_lib.from_url(settings.REDIS_URL, decode_responses=True)
         _redis_client.ping()
     else:
         _redis_client = None

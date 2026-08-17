@@ -13,6 +13,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from database import get_db
 from chatbot.tools import get_weather, convert_currency
+from cache import cache_get, cache_set
 from services.maps_service import (
     geocode_location,
     get_airport_location,
@@ -35,9 +36,14 @@ router = APIRouter(prefix="/api/external", tags=["External APIs"])
 @router.get("/weather/{city}")
 def weather(city: str):
     """Get current weather for a city (Open-Meteo, free, no key needed)."""
+    cache_key = f"weather:{city.lower()}"
+    cached = cache_get(cache_key)
+    if cached:
+        return cached
     result = get_weather(city)
     if "error" in result:
         raise HTTPException(status_code=404, detail=result["error"])
+    cache_set(cache_key, result, ttl=600)
     return result
 
 
@@ -52,9 +58,14 @@ class CurrencyConvertRequest(BaseModel):
 @router.post("/currency/convert")
 def currency_convert(data: CurrencyConvertRequest):
     """Convert currency using free exchange rate API."""
+    cache_key = f"currency:convert:{data.from_currency}:{data.to_currency}:{data.amount}"
+    cached = cache_get(cache_key)
+    if cached:
+        return cached
     result = convert_currency(data.amount, data.from_currency, data.to_currency)
     if "error" in result:
         raise HTTPException(status_code=400, detail=result["error"])
+    cache_set(cache_key, result, ttl=3600)
     return result
 
 
@@ -63,14 +74,20 @@ def currency_rates(base: str = "INR"):
     """Get latest exchange rates for a base currency."""
     import httpx
     from config import settings
+    cache_key = f"currency:rates:{base.upper()}"
+    cached = cache_get(cache_key)
+    if cached:
+        return cached
     try:
         resp = httpx.get(f"{settings.EXCHANGE_RATE_API_URL}/{base}", timeout=10)
         data = resp.json()
-        return {
+        result = {
             "base": base,
             "rates": data.get("rates", {}),
             "last_updated": data.get("time_last_update_utc"),
         }
+        cache_set(cache_key, result, ttl=3600)
+        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch rates: {str(e)}")
 
@@ -80,9 +97,14 @@ def currency_rates(base: str = "INR"):
 @router.get("/maps/geocode")
 def maps_geocode(q: str = Query(..., description="Place name to geocode")):
     """Geocode a place name to lat/lon (OpenStreetMap Nominatim, free)."""
+    cache_key = f"geocode:{q.lower().strip()}"
+    cached = cache_get(cache_key)
+    if cached:
+        return cached
     result = geocode_location(q)
     if "error" in result:
         raise HTTPException(status_code=404, detail=result["error"])
+    cache_set(cache_key, result, ttl=86400)
     return result
 
 
