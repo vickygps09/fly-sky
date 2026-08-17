@@ -86,9 +86,15 @@ def intent_recognition(state: ChatState) -> ChatState:
                 return state
             # Not a PNR — fall through to keyword/LLM matching
         # In confirm_cancel, "yes" and "no" are valid responses
+        # But allow explicit intent changes like "check in" or "book flight"
         if flow_step == "confirm_cancel":
-            state["intent"] = state.get("intent") or "cancel_booking"
-            return state
+            cancel_exit_keywords = ["check-in", "check in", "book", "status", "refund",
+                                    "weather", "currency", "baggage", "help", "modify"]
+            if not any(kw in msg_lower for kw in cancel_exit_keywords):
+                state["intent"] = state.get("intent") or "cancel_booking"
+                return state
+            # User changed topic — clear cancel flow state
+            state["flow_step"] = None
         # In awaiting_modification_choice or modify sub-steps, keep modify intent
         if flow_step in ("awaiting_modification_choice", "collect_new_seat", "collect_new_date", "select_replacement_flight"):
             state["intent"] = state.get("intent") or "modify_booking"
@@ -2226,6 +2232,7 @@ def handle_check_in(state: ChatState) -> ChatState:
 
     if not booking_id:
         state["response"] = "Please provide your booking PNR for web check-in. (e.g., 'Check-in for ABC123')"
+        state["flow_step"] = "collect_check_in_pnr"
         return state
 
     if db:
