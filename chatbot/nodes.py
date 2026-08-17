@@ -37,6 +37,7 @@ def intent_recognition(state: ChatState) -> ChatState:
 
     # Context-aware: if we're in a multi-turn flow, keep the same intent
     flow_step = state.get("flow_step", "")
+    print(f"[INTENT] msg={last_message!r} flow_step={flow_step!r} prev_intent={state.get('intent')!r}", flush=True)
     if flow_step and (flow_step.startswith("collect_") or flow_step.startswith("chat_collect_") or flow_step in (
         "select_flight", "select_return_flight", "passenger_details", "payment", "no_flights",
         "confirm_cancel", "awaiting_modification_choice", "choose_booking_method",
@@ -2515,6 +2516,7 @@ def handle_general_query(state: ChatState) -> ChatState:
                 "for detailed policy information, or I can connect you to a human agent."
             )
         else:
+            print(f"[GENERAL_QUERY_FALLBACK] msg={state['messages'][-1].content!r} intent={state.get('intent')!r}", flush=True)
             state["response"] = (
                 "I'm here to help with flight bookings, status checks, cancellations, and more. "
                 "Could you rephrase your question? If you need immediate assistance, I can connect you to a human agent."
