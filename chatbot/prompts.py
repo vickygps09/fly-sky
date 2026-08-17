@@ -35,29 +35,42 @@ Guidelines:
 # ── Intent Recognition ─────────────────────────────────────────────────────
 
 INTENT_RECOGNITION_PROMPT = """You are an intent classifier for an airline chatbot.
-Classify the user's message into one of these intents:
+
+Current conversation state:
+- Current flow step: {flow_step}
+- Current intent: {current_intent}
+
+Recent conversation (last 4 turns):
+{conversation_context}
+
+Classify the user's message into exactly one of these intents:
 
 - "greeting": Greetings, hellos, how are you
 - "book_flight": User wants to search or book a flight
-- "flight_status": User wants to check flight status
+- "flight_status": User wants to check flight status or track a flight
 - "cancel_booking": User wants to cancel a booking
-- "modify_booking": User wants to change/modify a booking
-- "refund": User is asking about refund status
-- "check_in": User wants to do web check-in or get boarding pass
-- "baggage_info": User is asking about baggage allowance
-- "fare_comparison": User wants to compare fares
-- "weather": User is asking about weather at a destination or departure city (e.g., "what's the weather in Delhi", "weather forecast for Mumbai", "will it rain in Bangalore")
-- "currency_conversion": User is asking about currency exchange rates or converting prices (e.g., "convert 5000 INR to USD", "how much is $100 in rupees", "exchange rate for EUR")
-- "travel_policy": User is asking about cancellation policy, refund policy, modification policy, baggage policy, check-in policy, pet policy, unaccompanied minors, or any airline policy
-- "faq": User is asking a general travel FAQ (e.g., "what documents do I need", "how early should I arrive", "can I carry liquids", "do you serve meals")
-- "help": User needs help or is asking about capabilities
-- "human_agent": User explicitly wants to talk to a human agent
-- "general_query": Anything else — small talk, jokes, general knowledge questions not related to the above intents
+- "modify_booking": User wants to change/reschedule/modify a booking
+- "refund": User is asking about refund status or requesting a refund
+- "check_in": User wants to do web check-in or get a boarding pass
+- "my_bookings": User wants to view their existing bookings or tickets
+- "baggage_info": User is asking about baggage allowance or luggage rules
+- "fare_comparison": User wants to compare fares or find the cheapest option
+- "weather": User is asking about weather at a destination or city
+- "currency_conversion": User is asking about currency exchange rates or converting amounts
+- "travel_policy": User is asking about airline policies (cancellation, baggage, check-in, pets, etc.)
+- "faq": User is asking a general travel FAQ (documents needed, arrival time, liquids, meals, etc.)
+- "help": User needs help or is asking what the bot can do
+- "human_agent": User explicitly wants to talk to a human agent or customer service
+- "general_query": Anything else not related to the above
 
-Recent conversation context (for reference):
-{conversation_context}
+Classification rules:
+1. If the current flow step is set (not "none"), the user is mid-conversation. Only change intent if the message clearly starts a completely different topic (e.g. user was checking in but now says "actually book me a new flight").
+2. A bare PNR like "ABC123" in the middle of a check-in or cancel flow is a response to the bot's question — keep the current intent.
+3. "yes", "no", "ok", "confirm", "proceed" are always continuations of the current flow — keep current intent.
+4. Short ambiguous replies (1-3 words without a clear new topic) should keep the current intent.
+5. Only classify as "general_query" if the message is clearly unrelated to airline operations.
 
-Respond with ONLY the intent name, nothing else.
+Respond with ONLY the intent name (e.g., check_in), nothing else.
 
 User message: {message}
 """

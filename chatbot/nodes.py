@@ -113,145 +113,28 @@ def intent_recognition(state: ChatState) -> ChatState:
             state["intent"] = state.get("intent") or "book_flight"
             return state
 
-    # Quick keyword-based pre-check for common intents
-    # Ordered by specificity — more specific phrases first to avoid false matches
-    msg_lower = last_message.lower().strip()
-
-    # Use word-boundary matching for single words, substring for phrases
-    keyword_map = [
-        # Refund — check before status since "refund status" contains "status"
-        (r"\brefund\b", "refund"),
-        # Cancel — check before my_bookings since "cancel my booking" contains "my booking"
-        (r"\bcancel\b", "cancel_booking"),
-        # Modify — check before my_bookings since "change my booking" contains "my booking"
-        (r"\bmodify\b", "modify_booking"),
-        ("change my", "modify_booking"),
-        ("change the", "modify_booking"),
-        (r"\breschedule\b", "modify_booking"),
-        # My Bookings — check before book_flight since "bookings" contains "book"
-        ("my flight bookings", "my_bookings"),
-        ("my booking", "my_bookings"),
-        ("my bookings", "my_bookings"),
-        ("my tickets", "my_bookings"),
-        ("my reservations", "my_bookings"),
-        ("show booking", "my_bookings"),
-        ("show my", "my_bookings"),
-        ("have booked", "my_bookings"),
-        ("list my bookings", "my_bookings"),
-        ("what flights do i have", "my_bookings"),
-        # Book flight
-        ("need a flight", "book_flight"),
-        ("need a ticket", "book_flight"),
-        ("flight from", "book_flight"),
-        ("flights from", "book_flight"),
-        ("search flight", "book_flight"),
-        ("find flight", "book_flight"),
-        ("find me a flight", "book_flight"),
-        ("fly from", "book_flight"),
-        ("i want to fly", "book_flight"),
-        ("looking for flight", "book_flight"),
-        ("show me flight", "book_flight"),
-        ("plan a trip", "book_flight"),
-        ("plane ticket", "book_flight"),
-        ("travel from", "book_flight"),
-        ("i need to travel", "book_flight"),
-        ("book 2 tickets", "book_flight"),
-        (r"\bbook a flight\b", "book_flight"),
-        (r"\bbook\b", "book_flight"),
-        # Flight status
-        ("flight status", "flight_status"),
-        ("on time", "flight_status"),
-        ("where is flight", "flight_status"),
-        ("departed", "flight_status"),
-        ("delayed", "flight_status"),
-        (r"\bstatus\b", "flight_status"),
-        # Check-in
-        ("check-in", "check_in"),
-        ("check in", "check_in"),
-        ("check me in", "check_in"),
-        (r"\bboarding\b", "check_in"),
-        # Baggage
-        (r"\bbaggage\b", "baggage_info"),
-        (r"\bluggage\b", "baggage_info"),
-        # Weather
-        (r"\bweather\b", "weather"),
-        (r"\bforecast\b", "weather"),
-        (r"\btemperature in\b", "weather"),
-        (r"\bwill it rain\b", "weather"),
-        # Currency conversion
-        (r"\bconvert\b", "currency_conversion"),
-        (r"\bcurrency\b", "currency_conversion"),
-        (r"\bexchange rate\b", "currency_conversion"),
-        (r"\binr to\b", "currency_conversion"),
-        (r"\busd to\b", "currency_conversion"),
-        (r"\beur to\b", "currency_conversion"),
-        (r"\brupees to\b", "currency_conversion"),
-        (r"\bdollars to\b", "currency_conversion"),
-        (r"\binr in\b", "currency_conversion"),
-        (r"\busd in\b", "currency_conversion"),
-        (r"\beur in\b", "currency_conversion"),
-        (r"\bin dollars\b", "currency_conversion"),
-        (r"\bin rupees\b", "currency_conversion"),
-        # Fare comparison
-        ("fare comparison", "fare_comparison"),
-        (r"\bcompare\b", "fare_comparison"),
-        (r"\bfare\b", "fare_comparison"),
-        ("cheapest", "fare_comparison"),
-        # Human agent — expanded patterns
-        ("human agent", "human_agent"),
-        ("talk to a human", "human_agent"),
-        ("talk to an agent", "human_agent"),
-        ("speak with a human", "human_agent"),
-        ("speak to a human", "human_agent"),
-        ("real person", "human_agent"),
-        ("customer service", "human_agent"),
-        (r"\brepresentative\b", "human_agent"),
-        # Help — expanded patterns
-        ("what can you", "help"),
-        ("what can you do", "help"),
-        ("what you can do", "help"),
-        ("capabilities", "help"),
-        ("assist me", "help"),
-        ("how can you help", "help"),
-        (r"\bhelp\b", "help"),
-        # Greeting — check last to avoid matching substrings in city names
-        ("hiya", "greeting"),
-        ("what's up", "greeting"),
-        (r"\bhi\b", "greeting"),
-        (r"\bhello\b", "greeting"),
-        (r"\bhey\b", "greeting"),
-        (r"\bgreetings\b", "greeting"),
-        (r"\bgood morning\b", "greeting"),
-        (r"\bgood evening\b", "greeting"),
-        (r"\bgood afternoon\b", "greeting"),
-    ]
-
-    for pattern, intent in keyword_map:
-        if re.search(pattern, msg_lower):
-            state["intent"] = intent
-            return state
-
-    # Use LLM for complex intent recognition
+    # LLM-based intent recognition with full conversation context
     try:
         llm = get_llm(temperature=0)
         conversation_history = state.get("conversation_history", [])
-        # Build context from last 4 turns
         context_lines = []
         for hist in conversation_history[-4:]:
             speaker = "User" if hist["role"] == "user" else "Bot"
-            context_lines.append(f"{speaker}: {hist['content'][:120]}")
+            context_lines.append(f"{speaker}: {hist['content'][:150]}")
         conversation_context = "\n".join(context_lines) if context_lines else "None"
         prompt = INTENT_RECOGNITION_PROMPT.format(
             message=last_message,
             conversation_context=conversation_context,
+            flow_step=flow_step or "none",
+            current_intent=state.get("intent") or "none",
         )
         response = llm.invoke([HumanMessage(content=prompt)])
-        intent = response.content.strip().lower().strip('"').strip("'")
-        # Validate intent
+        intent = response.content.strip().lower().strip('"').strip("'").split()[0]
         valid_intents = [
             "greeting", "book_flight", "flight_status", "cancel_booking",
             "modify_booking", "refund", "check_in", "baggage_info",
-            "fare_comparison", "help", "human_agent", "general_query", "my_bookings",
+            "fare_comparison", "travel_policy", "faq", "weather",
+            "currency_conversion", "help", "human_agent", "general_query", "my_bookings",
         ]
         state["intent"] = intent if intent in valid_intents else "general_query"
     except Exception:
