@@ -1,0 +1,135 @@
+{
+  "total": 127,
+  "correct": 127,
+  "accuracy": 1.0,
+  "macro": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+  },
+  "weighted": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+  },
+  "per_intent": {
+    "baggage_info": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "tp": 10,
+      "fp": 0,
+      "fn": 0,
+      "support": 10
+    },
+    "book_flight": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "tp": 15,
+      "fp": 0,
+      "fn": 0,
+      "support": 15
+    },
+    "cancel_booking": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "tp": 10,
+      "fp": 0,
+      "fn": 0,
+      "support": 10
+    },
+    "check_in": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "tp": 10,
+      "fp": 0,
+      "fn": 0,
+      "support": 10
+    },
+    "fare_comparison": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "tp": 8,
+      "fp": 0,
+      "fn": 0,
+      "support": 8
+    },
+    "flight_status": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "tp": 10,
+      "fp": 0,
+      "fn": 0,
+      "support": 10
+    },
+    "general_query": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "tp": 10,
+      "fp": 0,
+      "fn": 0,
+      "support": 10
+    },
+    "greeting": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "tp": 10,
+      "fp": 0,
+      "fn": 0,
+      "support": 10
+    },
+    "help": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "tp": 8,
+      "fp": 0,
+      "fn": 0,
+      "support": 8
+    },
+    "human_agent": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "tp": 8,
+      "fp": 0,
+      "fn": 0,
+      "support": 8
+    },
+    "modify_booking": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "tp": 10,
+      "fp": 0,
+      "fn": 0,
+      "support": 10
+    },
+    "my_bookings": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "tp": 8,
+      "fp": 0,
+      "fn": 0,
+      "support": 8
+    },
+    "refund": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "tp": 10,
+      "fp": 0,
+      "fn": 0,
+      "support": 10
+    }
+  },
+  "misclassified": []
+}

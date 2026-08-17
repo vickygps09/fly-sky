@@ -1,0 +1,167 @@
+{
+  "pass": 32,
+  "fail": 0,
+  "total": 32,
+  "results": [
+    {
+      "name": "Health endpoint returns 200",
+      "passed": true,
+      "detail": "status=healthy"
+    },
+    {
+      "name": "Metrics endpoint returns 200",
+      "passed": true,
+      "detail": "keys=['bookings', 'flights', 'users', 'conversations', 'revenue']"
+    },
+    {
+      "name": "Weather intent detected",
+      "passed": true,
+      "detail": "intent=weather"
+    },
+    {
+      "name": "Weather response has data",
+      "passed": true,
+      "detail": "reply[:80]=\ud83c\udf24\ufe0f **Weather in Delhi:**\n\u2022 Temperature: 32.9\u00b0C\n\u2022 Condition: Clear sky\n\u2022 Wind Spe"
+    },
+    {
+      "name": "Currency intent detected",
+      "passed": true,
+      "detail": "intent=currency_conversion"
+    },
+    {
+      "name": "Currency response has conversion",
+      "passed": true,
+      "detail": "reply[:80]=\ud83d\udcb1 **Currency Conversion:**\n\u2022 \u20b95,000.00 INR = $52.29 USD\n\u2022 Exchange Rate: 1 INR ="
+    },
+    {
+      "name": "Baggage intent detected",
+      "passed": true,
+      "detail": "intent=baggage_info"
+    },
+    {
+      "name": "Baggage response has data",
+      "passed": true,
+      "detail": "reply[:80]=\ud83e\uddf3 **Baggage Allowance (Economy Class):**\n\n\ud83c\udf92 Cabin Baggage: 7 kg\n\ud83d\udce6 Checked Baggag"
+    },
+    {
+      "name": "Valid coupon FLY500 accepted",
+      "passed": true,
+      "detail": "discount=\u20b9500.0, final=\u20b94500.0"
+    },
+    {
+      "name": "Invalid coupon rejected",
+      "passed": true,
+      "detail": "status=400"
+    },
+    {
+      "name": "Promo code IND80 accepted",
+      "passed": true,
+      "detail": "discount=\u20b9100.0, final=\u20b94900.0"
+    },
+    {
+      "name": "Flight search intent",
+      "passed": true,
+      "detail": "intent=book_flight"
+    },
+    {
+      "name": "Flight search returns results",
+      "passed": true,
+      "detail": "reply[:80]=\ud83d\udd0d Found 3 flight(s) from Bangalore to Delhi on August 18, 2026:\n\n**1.** \u2708\ufe0f SB167"
+    },
+    {
+      "name": "Booking created",
+      "passed": true,
+      "detail": "PNR=27X8VD, amount=\u20b94600.0"
+    },
+    {
+      "name": "Booking has baggage info",
+      "passed": true,
+      "detail": "baggage=10.0 kg"
+    },
+    {
+      "name": "Booking has insurance info",
+      "passed": true,
+      "detail": "insurance=True"
+    },
+    {
+      "name": "Booking has flight_number",
+      "passed": true,
+      "detail": "SB167"
+    },
+    {
+      "name": "Booking has departure info",
+      "passed": true,
+      "detail": "Bangalore \u2192 Delhi"
+    },
+    {
+      "name": "Payment initiated",
+      "passed": true,
+      "detail": "txn_id=fd4bd940-2ba9-4e45-959b-d802e39c57bb"
+    },
+    {
+      "name": "Payment confirmed",
+      "passed": true,
+      "detail": "status=?"
+    },
+    {
+      "name": "PNR lookup via chat",
+      "passed": true,
+      "detail": "reply[:80]=\ud83d\udce7 What email address did you use for your booking? I'll look up your reservation"
+    },
+    {
+      "name": "Baggage info for booking",
+      "passed": true,
+      "detail": "reply[:80]=\ud83e\uddf3 **Baggage Allowance for PNR 27X8VD:**\n\n\u2708\ufe0f Flight: SB167 (Economy)\n\n\ud83c\udf92 Cabin Bag"
+    },
+    {
+      "name": "Intent: 'What's the weather in Mumbai today'",
+      "passed": true,
+      "detail": "expected=weather, got=weather"
+    },
+    {
+      "name": "Intent: 'Weather forecast for Bangalore'",
+      "passed": true,
+      "detail": "expected=weather, got=weather"
+    },
+    {
+      "name": "Intent: 'Convert 1000 rupees to dollars'",
+      "passed": true,
+      "detail": "expected=currency_conversion, got=currency_conversion"
+    },
+    {
+      "name": "Intent: 'How much is 5000 INR in USD'",
+      "passed": true,
+      "detail": "expected=currency_conversion, got=currency_conversion"
+    },
+    {
+      "name": "Intent: 'How much baggage can I carry'",
+      "passed": true,
+      "detail": "expected=baggage_info, got=baggage_info"
+    },
+    {
+      "name": "Intent: 'What is the luggage limit for economy'",
+      "passed": true,
+      "detail": "expected=baggage_info, got=baggage_info"
+    },
+    {
+      "name": "Fare comparison intent",
+      "passed": true,
+      "detail": "intent=fare_comparison"
+    },
+    {
+      "name": "Fare comparison has data",
+      "passed": true,
+      "detail": "reply[:80]=To compare fares, please search for a flight first.\nTell me your departure city,"
+    },
+    {
+      "name": "Check-in intent detected",
+      "passed": true,
+      "detail": "intent=check_in"
+    },
+    {
+      "name": "Check-in response",
+      "passed": true,
+      "detail": "reply[:80]=\u2708\ufe0f **Web Check-in for PNR 27X8VD**\nFlight: SB167 \u2014 Bangalore \u2192 Delhi\nCabin: Econ"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: skybook-config
+  namespace: skybook
+data:
+  APP_NAME: "SkyBook AI"
+  APP_ENV: "production"
+  LLM_PROVIDER: "groq"
+  PAYMENT_GATEWAY: "mock"
+  PAYMENT_CURRENCY: "INR"
+  SMS_PROVIDER: "mock"
+  CORS_ORIGINS: "https://skybook.example.com"
+  DATABASE_URL: "postgresql://skybook:skybook@postgres-svc:5432/skybook"

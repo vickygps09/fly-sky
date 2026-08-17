@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: skybook-frontend
+  namespace: skybook
+  labels:
+    app: skybook
+    component: frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: skybook
+      component: frontend
+  template:
+    metadata:
+      labels:
+        app: skybook
+        component: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: skybook/frontend:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: NEXT_PUBLIC_API_URL
+              value: "http://skybook-backend-svc:8000"
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "250m"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: skybook-frontend-svc
+  namespace: skybook
+spec:
+  selector:
+    app: skybook
+    component: frontend
+  ports:
+    - port: 3000
+      targetPort: 3000
+  type: ClusterIP
