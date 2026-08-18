@@ -72,6 +72,14 @@ class Settings(BaseSettings):
     MAPS_GEOCODING_URL: str = "https://nominatim.openstreetmap.org/search"
     MAPS_ROUTING_URL: str = "https://router.project-osrm.org/route/v1/driving"
 
+    # Guardrails
+    PII_MASKING_ENABLED: bool = True
+    PROMPT_INJECTION_FILTER: bool = True
+    CONTENT_MODERATION_ENABLED: bool = True
+    RATE_LIMIT_PER_MINUTE: int = 20
+    DATA_RETENTION_DAYS: int = 90
+    OUTPUT_FILTERING_ENABLED: bool = True
+
     @property
     def cors_origins_list(self) -> List[str]:
         return [o.strip() for o in self.CORS_ORIGINS.split(",") if o.strip()]

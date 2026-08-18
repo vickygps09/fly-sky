@@ -12,15 +12,30 @@ from langchain_core.messages import HumanMessage, AIMessage
 from database import get_db
 import models
 from auth import get_current_user
+from config import settings
 from schemas import ChatMessage, ChatResponse, BookingDetailsRequest, BookingDetailsResponse, CSATCreate
 from chatbot.graph import get_graph
 from chatbot import tools
+from guardrails import apply_input_guardrails, filter_output, cleanup_old_conversations
 
 router = APIRouter(prefix="/api/chat", tags=["Chatbot"])
 
 
 def _process_message(message: str, session_id: str, user_id: str | None, db: Session) -> ChatResponse:
     """Process a chat message through the LangGraph workflow."""
+    # ── Input Guardrails ──
+    # Apply PII masking, prompt injection detection, content moderation, rate limiting
+    processed_message, guardrail_error = apply_input_guardrails(message, session_id)
+    if guardrail_error:
+        return ChatResponse(
+            session_id=session_id,
+            reply=guardrail_error,
+            intent=None,
+            entities={},
+            metadata=None,
+            escalated=False,
+        )
+
     graph = get_graph()
 
     # Load conversation history from DB
@@ -86,7 +101,7 @@ def _process_message(message: str, session_id: str, user_id: str | None, db: Ses
     initial_state = {
         "session_id": session_id,
         "user_id": user_id,
-        "messages": [HumanMessage(content=message)],
+        "messages": [HumanMessage(content=processed_message)],
         "intent": prev_intent,
         "entities": prev_entities.copy(),
         "conversation_history": conversation_history,
@@ -195,9 +210,26 @@ def _process_message(message: str, session_id: str, user_id: str | None, db: Ses
 
     db.commit()
 
+    # ── Output Guardrail ──
+    # Filter LLM output to prevent leaking other users' PII
+    raw_reply = result.get("response", "I'm sorry, I couldn't process that. Please try again.")
+    if getattr(settings, "OUTPUT_FILTERING_ENABLED", True):
+        allowed_emails = []
+        allowed_phones = []
+        if user_id:
+            user = db.query(models.User).filter(models.User.id == user_id).first()
+            if user:
+                if user.email:
+                    allowed_emails = [user.email]
+                if user.phone:
+                    allowed_phones = [user.phone]
+        filtered_reply = filter_output(raw_reply, allowed_emails, allowed_phones)
+    else:
+        filtered_reply = raw_reply
+
     return ChatResponse(
         session_id=session_id,
-        reply=result.get("response", "I'm sorry, I couldn't process that. Please try again."),
+        reply=filtered_reply,
         intent=result.get("intent"),
         entities=result.get("entities"),
         metadata=result.get("response_metadata"),
@@ -212,6 +244,16 @@ def send_message(data: ChatMessage, db: Session = Depends(get_db)):
         return _process_message(data.message, data.session_id, data.user_id, db)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Chatbot error: {str(e)}")
+
+
+@router.post("/cleanup-old-conversations")
+def cleanup_conversations(db: Session = Depends(get_db)):
+    """Delete conversations older than the retention period (90 days).
+
+    Can be called via cron job or admin dashboard.
+    """
+    deleted = cleanup_old_conversations(db, retention_days=getattr(settings, "DATA_RETENTION_DAYS", 90))
+    return {"deleted": deleted, "retention_days": getattr(settings, "DATA_RETENTION_DAYS", 90)}
 
 
 @router.get("/history/{session_id}", response_model=list[dict])
